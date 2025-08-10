@@ -1,148 +1,205 @@
-# 🤖 AI Resume & Portfolio Assistant
+# AI Resume & Portfolio Assistant
 
-> **AgentForce Hackathon 2025 - Track 1 Submission**
-> 
-> An AI-powered career assistant that transforms resume optimization and cover letter creation with visual analytics and intelligent feedback.
+## 📌 Overview
+An AI-powered web application for resume analysis, ATS-score estimation, and cover letter generation using Google’s Gemini API. Provides structured feedback, personalized recommendations, and PDF export in a light/dark-themed interface.
 
-![Project Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
-![Tech Stack](https://img.shields.io/badge/Stack-React%2BFastAPI%2BGemini-blue)
-![Features](https://img.shields.io/badge/Features-Multi%20Format%2BVisual%20Analytics-orange)
-
-## 🌟 Key Features
-
-### 📄 **Smart Resume Analysis**
-- **Multi-format support**: PDF, DOCX, TXT files
-- **ATS Compatibility Scoring**: Visual 0-100 scoring with color-coded feedback
-- **AI-powered insights**: Detailed analysis using Google Gemini API
-- **Interactive dashboard**: Animated charts and progress indicators
-
-### ✍️ **Intelligent Cover Letter Generation**
-- **Multiple tone options**: Professional, Enthusiastic, Creative, Confident
-- **Job-specific customization**: Tailored to job descriptions
-- **Instant generation**: AI-powered content creation
-- **Export options**: Copy to clipboard and download
-
-### 🎨 **Premium User Experience**
-- **Modern UI**: Professional dashboard with smooth animations
-- **Visual feedback**: Interactive charts and progress bars
-- **Responsive design**: Works seamlessly on all devices
-- **Real-time processing**: Instant analysis and feedback
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.8+
-- Node.js 16+
-- Google Gemini API key
-
-### Installation
-
-1. **Clone the repository**
-
-2. **Backend Setup**
-Create virtual environment
-python -m venv venv
-
-Activate virtual environment
-Windows:
-venv\Scripts\activate
-
-Mac/Linux:
-source venv/bin/activate
-
-Install dependencies
-pip install fastapi uvicorn python-dotenv httpx PyPDF2 python-docx python-multipart
-
-Create .env file
-echo "GEMINI_API_KEY=your_gemini_api_key_here" > backend/.env
-
-
-3. **Frontend Setup**
-cd frontend
-npm install
-
-
-### Running the Application
-
-1. **Start Backend** (in one terminal)
-cd backend
-python -m uvicorn simple_main:app --reload
-
-
-2. **Start Frontend** (in another terminal)
-cd frontend
-npm run dev
-
-
-3. **Open**: http://localhost:3000
-
-## 🏗️ Architecture
-
-AI Resume Assistant
-├── Backend (FastAPI)
-│ ├── Resume parsing (PDF, DOCX, TXT)
-│ ├── Google Gemini API integration
-│ ├── Cover letter generation
-│ └── Structured analysis endpoints
-└── Frontend (React + TypeScript)
-├── File upload with drag-and-drop
-├── Visual analytics dashboard
-├── Interactive charts and animations
-└── Modern responsive design
-
-
-## 🛠️ Technology Stack
-
-- **Backend**: FastAPI, Python, Google Gemini API
-- **Frontend**: React, TypeScript, Vite
-- **UI Libraries**: Framer Motion, Recharts, Lucide Icons
-- **File Processing**: PyPDF2, python-docx
-- **Styling**: CSS Modules with custom animations
-
-## 🎯 Hackathon Highlights
-
-### **Innovation & Problem Relevance**
-- Addresses real career development challenges
-- Visual analytics for ATS optimization
-- Multi-modal AI analysis
-
-### **Technical Soundness**
-- Robust file processing pipeline
-- Structured AI prompting for consistent results
-- Error handling and validation
-
-### **UX/UI Excellence**
-- Premium SaaS-quality design
-- Smooth animations and micro-interactions
-- Intuitive user flow
-
-### **Working Demo**
-- Full end-to-end functionality
-- Real-time processing
-- Professional presentation ready
-
-## 📊 Features Demo
-
-1. **Upload Resume** → Drag & drop PDF/DOCX/TXT
-2. **Add Job Description** → Paste target job requirements
-3. **Get Visual Analysis** → See ATS score, ratings, recommendations
-4. **Generate Cover Letter** → Choose tone and get personalized content
-5. **Export Results** → Download analysis and cover letter
-
-## 🔧 API Endpoints
-
-- `GET /health` - Health check
-- `POST /resume/analyze` - Text-based resume analysis
-- `POST /resume/analyze-file` - File-based resume analysis
-- `POST /cover-letter/generate` - Cover letter generation
-
-## 📈 Future Enhancements
-
-- LinkedIn profile integration
-- GitHub portfolio analysis
-- Batch processing capabilities
-- Advanced export options
-- Mobile app version
+## ✨ Features
+- Upload resume (PDF, DOCX, TXT) or paste text  
+- Enter job description for tailored AI analysis  
+- AI-generated structured feedback & recommendations  
+- Overall rating (0–10) and ATS compatibility score (0–100)  
+- Cover letter generation with tone options  
+- PDF export of analysis, cover letter, or both  
+- Dark/Light mode toggle  
+- Optional GitHub & LinkedIn profile insights  
 
 ---
 
+## 🛠 Tech Stack
+- **Frontend:** React, TypeScript, Framer Motion, Lucide Icons, html2canvas, jsPDF  
+- **Backend:** FastAPI (Python), Pydantic, httpx, Uvicorn  
+- **AI Model:** Google Gemini 1.5 Flash REST API  
+- **Styling:** CSS variables, responsive grid & flexbox  
+
+---
+
+## 📂 Project Structure
+root
+├── frontend/ # React app
+│ ├── src/
+│ │ ├── components/ # UI components (FileUpload, Analysis, CoverLetter, ThemeToggle, etc.)
+│ │ ├── hooks/ # Custom hooks (useGitHubProfile)
+│ │ ├── contexts/ # ThemeContext
+│ │ ├── App.tsx # Main UI layout & logic
+│ │ └── App.css # Styles & theme variables
+│ └── package.json
+├── backend/ # FastAPI app
+│ ├── simple_main.py # API endpoints, CORS, Gemini integration
+│ └── requirements.txt # Python dependencies
+└── README.md # Project overview & setup
+
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1. Clone repository  
+```git clone https://github.com/GunagyeJain/resume-assistant-ai.git```
+
+```cd ai-resume-assistant```
+
+
+### 2. Backend setup  
+```cd backend```
+
+```python3 -m venv venv```
+
+```source venv/bin/activate```
+
+```pip install -r requirements.txt```
+
+
+Create a `.env` file in `backend/`:
+GEMINI_API_KEY=your_google_gemini_api_key
+
+
+Run FastAPI server:
+
+```uvicorn simple_main:app --reload --port 8000```
+
+
+### 3. Frontend setup  
+`cd ../frontend`
+
+`npm install`
+
+`npm start`
+
+
+Open your browser at [**http://localhost:3000**](http://localhost:3000).
+
+---
+
+## 🌐 Environment Variables
+
+- **Backend**  
+  - `GEMINI_API_KEY` → Google Gemini API key  
+- **Frontend**  
+  - Edit API base URL in `src/App.tsx` if needed (default: `http://localhost:8000`)
+
+---
+
+## 🚀 Usage Guide
+
+1. Launch backend (`localhost:8000`) and frontend (`localhost:3000`).  
+2. **Upload Resume**: PDF/DOCX/TXT or paste text.  
+3. **Enter Job Description** in the adjacent card.  
+4. Click **Analyze Resume**.  
+5. Review AI feedback: overall rating, ATS score, skills match, strengths, weaknesses, recommendations.  
+6. Generate a personalized cover letter.  
+7. Export analysis, cover letter, or full report as PDF.  
+8. Toggle between light and dark modes via the button in the top right.
+
+---
+
+## 🔗 API Endpoints
+
+### `GET /health`  
+**Response:**  
+`{ "status": "ok" }`
+
+### `POST /resume/analyze`  
+**Request JSON:**  
+`{`
+
+`"text": "Resume text here...",`
+
+`"job_description": "Job description here...",`
+
+`"github_profile": { /* optional profile data */ },`
+
+`"linkedin_summary": "Optional LinkedIn summary text"`
+
+`}`
+**Response JSON:**  
+
+
+`{`
+
+`"analysis": {`
+
+`"overall_rating": "8/10",`
+
+`"ats_score": "85/100",`
+
+`"skills_match": ["JavaScript", "React"],`
+
+`"skills_missing": ["TypeScript", "Node.js"],`
+
+`"strengths": ["Clear formatting", "Relevant projects"],`
+
+`"weaknesses": ["Missing keywords", "No quantifiable metrics"],`
+
+`"recommendations": ["Add bullet metrics", "Include more tech keywords"],`
+
+`"raw": "…" // Raw AI response if parsing failed`
+
+`}`
+
+`}`
+
+### `POST /resume/analyze-file`  
+Form-data fields:  
+- `file`: Resume file (PDF, DOCX, TXT)  
+- `job_description`: (optional) text  
+- `github_profile`: (optional) JSON string  
+- `linkedin_summary`: (optional) text  
+
+**Response:** Same JSON schema as `/resume/analyze`.
+
+### `POST /cover-letter/generate`  
+**Request JSON:**  
+
+`{`
+`"resume_text": "Text of resume or summary...",`
+`"job_description": "Job description text",`
+`"tone": "professional"`
+`}`
+
+**Response JSON:**  
+
+`{ "cover_letter": "Dear Hiring Manager, …" }`
+
+
+---
+
+## 📸 Screenshots
+
+![Upload & Analysis](./docs/screenshots/upload_analysis.png)  
+
+![Cover Letter & Export](./docs/screenshots/cover_export.png)  
+
+---
+
+## 🗺 Architecture Diagram
+
+![Architecture Diagram Placeholder](./docs/architecture.png)  
+
+---
+
+## 📜 License
+This project is licensed under the MIT License. See `LICENSE` for details.
+
+---
+
+## 🚀 Future Improvements
+- Real-time GitHub & LinkedIn scraping for dynamic insights  
+- User authentication & profile management  
+- Enhanced NLP scoring algorithms  
+- Multilingual support  
+- Hosted production deployment with Docker & CI/CD  
+
+---
+
+*Prepared by HackClub, [10/08/25]*  
+*Team Members - Gunagye Jain, Akshit Mishra*
