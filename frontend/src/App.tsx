@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { FileUpload } from './components/FileUpload';
 import { JobDescriptionInput } from './components/JobDescriptionInput';
 import { ResumeAnalysis } from './components/ResumeAnalysis';
@@ -17,18 +17,27 @@ interface AnalysisResult {
 
 function App() {
   const [resumeText, setResumeText] = useState<string>('');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState<string>('');
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileUpload = (content: string) => {
-    setResumeText(content);
+  const handleFileUpload = (content: string, file?: File) => {
+    if (file && content === 'FILE_UPLOAD') {
+      // Handle file upload (PDF/DOCX)
+      setResumeFile(file);
+      setResumeText('');
+    } else {
+      // Handle text content
+      setResumeText(content);
+      setResumeFile(null);
+    }
     setError(null);
   };
 
   const handleAnalyze = async () => {
-    if (!resumeText.trim()) {
+    if (!resumeText && !resumeFile) {
       setError('Please upload a resume first');
       return;
     }
@@ -42,9 +51,25 @@ function App() {
     setError(null);
 
     try {
-      const response = await axios.post('http://localhost:8000/resume/analyze', {
-        text: resumeText
-      });
+      let response;
+      
+      if (resumeFile) {
+        // Handle file upload
+        const formData = new FormData();
+        formData.append('file', resumeFile);
+        formData.append('job_description', jobDescription);
+        
+        response = await axios.post('http://localhost:8000/resume/analyze-file', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        // Handle text input
+        response = await axios.post('http://localhost:8000/resume/analyze', {
+          text: resumeText
+        });
+      }
 
       setAnalysis(response.data.analysis);
     } catch (err) {
@@ -59,7 +84,7 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>🤖 AI Resume & Portfolio Assistant</h1>
-        <p>Get AI-powered insights to optimize your resume for any job</p>
+        <p>Upload PDF, DOCX, or TXT files for AI-powered resume analysis</p>
       </header>
 
       <main className="app-main">
@@ -73,9 +98,9 @@ function App() {
           <div className="card">
             <h2>📄 Upload Resume</h2>
             <FileUpload onFileUpload={handleFileUpload} />
-            {resumeText && (
+            {(resumeText || resumeFile) && (
               <div className="success-message">
-                ✅ Resume uploaded successfully!
+                ✅ Resume {resumeFile ? `file (${resumeFile.name})` : 'text'} uploaded successfully!
               </div>
             )}
           </div>
@@ -93,7 +118,7 @@ function App() {
           <button
             className={`analyze-button ${loading ? 'loading' : ''}`}
             onClick={handleAnalyze}
-            disabled={!resumeText || !jobDescription || loading}
+            disabled={(!resumeText && !resumeFile) || !jobDescription || loading}
           >
             {loading ? '🔄 Analyzing...' : '🔍 Analyze Resume'}
           </button>
