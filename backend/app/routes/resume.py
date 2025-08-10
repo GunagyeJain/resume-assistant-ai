@@ -3,9 +3,14 @@ from pydantic import BaseModel
 import tempfile
 import os
 from typing import Optional
+import sys
 
-from ..utils.gemini_client import analyze_resume
-from ..utils.file_parser import extract_text_from_file
+# Add the parent directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Now import your modules
+from app.utils.gemini_client import analyze_resume
+from app.utils.file_parser import extract_text_from_file
 
 router = APIRouter(prefix="/resume", tags=["Resume"])
 

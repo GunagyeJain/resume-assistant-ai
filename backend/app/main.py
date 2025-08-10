@@ -1,23 +1,19 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import sys
-import os
-
-# Add the current directory to the path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from routes import resume  # Import resume router
 
 app = FastAPI(title="AI Resume Assistant Backend")
 
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Import and include router after app creation
+from app.routes import resume
 app.include_router(resume.router)
 
 @app.get("/health")
