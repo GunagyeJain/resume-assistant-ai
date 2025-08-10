@@ -24,7 +24,7 @@ An AI-powered web application for resume analysis, ATS-score estimation, and cov
 ---
 
 ## 📂 Project Structure
-root
+```root
 ├── frontend/ # React app
 │ ├── src/
 │ │ ├── components/ # UI components (FileUpload, Analysis, CoverLetter, ThemeToggle, etc.)
@@ -37,7 +37,7 @@ root
 │ ├── simple_main.py # API endpoints, CORS, Gemini integration
 │ └── requirements.txt # Python dependencies
 └── README.md # Project overview & setup
-
+```
 
 ---
 
