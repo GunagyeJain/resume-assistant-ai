@@ -1,30 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-import "react-circular-progressbar/dist/styles.css";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { motion } from "framer-motion";
-import {
-  CheckCircle,
-  AlertTriangle,
-  TrendingUp,
-  Target,
-  FileText,
-  Zap,
-} from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { motion } from 'framer-motion';
+import { CheckCircle, AlertTriangle, TrendingUp, Target, FileText, Zap } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface AnalysisResult {
   candidates?: Array<{
     content: {
-      parts: Array<{
-        text: string;
+      parts?: Array<{
+        text?: string;
       }>;
     };
   }>;
@@ -35,234 +21,72 @@ interface EnhancedResumeAnalysisProps {
   analysis: AnalysisResult;
 }
 
-export function EnhancedResumeAnalysis({
-  analysis,
-}: EnhancedResumeAnalysisProps) {
-  // Add debug logging at the top
-  console.log("=== ANALYSIS COMPONENT DEBUG ===");
-  console.log("Analysis prop received:", analysis);
+export function EnhancedResumeAnalysis({ analysis }: EnhancedResumeAnalysisProps) {
+  const { theme } = useTheme();
+
+  // Safely extract analysis text
+  const analysisText = (() => {
+    if (!analysis) return 'No analysis data received';
+    if (analysis.error) return `Analysis Error: ${analysis.error}`;
+    const candidates = analysis.candidates;
+    if (!candidates?.length) return 'No analysis content available';
+    const parts = candidates[0].content?.parts;
+    if (!parts?.length) return 'No analysis content available';
+    const text = parts.text;
+    if (typeof text !== 'string') return 'No analysis text found';
+    return text.trim();
+  })();
 
   const [atsScore, setAtsScore] = useState(0);
   const [overallRating, setOverallRating] = useState(0);
   const [animatedScore, setAnimatedScore] = useState(0);
 
-  // Fixed text extraction with proper debugging
-  const analysisText = (() => {
-    try {
-      console.log("Attempting to extract text from analysis...");
-
-      // Check if analysis exists
-      if (!analysis) {
-        console.log("No analysis object provided");
-        return "No analysis data received";
-      }
-
-      // Check for error first
-      if (analysis.error) {
-        console.log("Analysis contains error:", analysis.error);
-        return `Analysis Error: ${analysis.error}`;
-      }
-
-      // Check candidates array
-      if (!analysis.candidates || !Array.isArray(analysis.candidates)) {
-        console.log("No candidates array found");
-        return "No candidates in analysis response";
-      }
-
-      if (analysis.candidates.length === 0) {
-        console.log("Empty candidates array");
-        return "Empty candidates array in response";
-      }
-
-      const firstCandidate = analysis.candidates[0];
-      console.log("First candidate:", firstCandidate);
-
-      // Check content structure
-      if (!firstCandidate.content) {
-        console.log("No content in first candidate");
-        return "No content in analysis candidate";
-      }
-
-      if (
-        !firstCandidate.content.parts ||
-        !Array.isArray(firstCandidate.content.parts)
-      ) {
-        console.log("No parts array in content");
-        return "No parts array in analysis content";
-      }
-
-      if (firstCandidate.content.parts.length === 0) {
-        console.log("Empty parts array");
-        return "Empty parts array in analysis";
-      }
-
-      const firstPart = firstCandidate.content.parts[0];
-      console.log("First part:", firstPart);
-
-      if (!firstPart.text) {
-        console.log("No text in first part");
-        return "No text field in analysis part";
-      }
-
-      const extractedText = firstPart.text.trim();
-      console.log("Successfully extracted text. Length:", extractedText.length);
-      console.log("Text preview:", extractedText.substring(0, 200) + "...");
-
-      return extractedText;
-    } catch (error) {
-      console.error("Error extracting analysis text:", error);
-      return `Error extracting text: ${error.message}`;
-    }
-  })();
-
-  console.log("Final analysisText:", analysisText.substring(0, 100) + "...");
-  console.log("=== END ANALYSIS DEBUG ===");
-
-  // Extract scores from AI text using multiple patterns
+  // Extract numeric scores
   useEffect(() => {
-    console.log("useEffect: Analyzing text for scores...");
-    console.log("Text to analyze:", analysisText.substring(0, 300) + "...");
-
-    // Try different patterns to extract ATS score
-    const atsPatterns = [
-      /ATS.*?SCORE.*?(\d+)/i,
-      /ATS.*?(\d+)\/100/i,
-      /COMPATIBILITY.*?(\d+)/i,
-      /Score.*?(\d+)/i,
-    ];
-
-    const ratingPatterns = [
-      /Overall Rating.*?(\d+)/i,
-      /Rating.*?(\d+)\/10/i,
-      /Assessment.*?(\d+)/i,
-    ];
-
-    let extractedAtsScore = 75; // Default fallback
-    let extractedRating = 7; // Default fallback
-
-    // Try to extract ATS score
-    for (const pattern of atsPatterns) {
-      const match = analysisText.match(pattern);
-      if (match) {
-        extractedAtsScore = Math.min(100, Math.max(0, parseInt(match[1])));
-        console.log(
-          "Found ATS score:",
-          extractedAtsScore,
-          "using pattern:",
-          pattern
-        );
-        break;
-      }
-    }
-
-    // Try to extract rating
-    for (const pattern of ratingPatterns) {
-      const match = analysisText.match(pattern);
-      if (match) {
-        extractedRating = Math.min(10, Math.max(0, parseInt(match[1])));
-        console.log(
-          "Found rating:",
-          extractedRating,
-          "using pattern:",
-          pattern
-        );
-        break;
-      }
-    }
-
-    console.log(
-      "Final scores - ATS:",
-      extractedAtsScore,
-      "Rating:",
-      extractedRating
-    );
-
-    setAtsScore(extractedAtsScore);
-    setOverallRating(extractedRating);
-
-    // Animated score counter
+    let score = 75, rating = 7;
+    const atsMatch = analysisText.match(/ATS.*?(\d+)(?:\/100)?/i);
+    if (atsMatch) score = Math.min(100, Math.max(0, parseInt(atsMatch[1])));
+    const rateMatch = analysisText.match(/Overall Rating.*?(\d+)(?:\/10)?/i);
+    if (rateMatch) rating = Math.min(10, Math.max(0, parseInt(rateMatch[1])));
+    setAtsScore(score);
+    setOverallRating(rating);
     let counter = 0;
-    const interval = setInterval(() => {
+    const iv = setInterval(() => {
       counter += 2;
-      setAnimatedScore(Math.min(counter, extractedAtsScore));
-      if (counter >= extractedAtsScore) {
-        clearInterval(interval);
-      }
+      setAnimatedScore(Math.min(counter, score));
+      if (counter >= score) clearInterval(iv);
     }, 30);
-
-    return () => clearInterval(interval);
+    return () => clearInterval(iv);
   }, [analysisText]);
 
-  // Parse strengths and weaknesses from text
-  // Parse strengths and weaknesses from text
-  const parseSection = (text: string, sectionName: string): string[] => {
-    try {
-      if (!text || typeof text !== "string") {
-        console.log(`parseSection: Invalid text for ${sectionName}`);
-        return [];
-      }
-
-      const regex = new RegExp(
-        `${sectionName}[:\\s]*([^\\n]*(?:\\n\\s*[-•].*)*)`,
-        "i"
-      );
-      const match = text.match(regex);
-
-      if (match && match[1]) {
-        const result = match[1]
-          .split(/[-•]/)
-          .map((item) => item.trim())
-          .filter((item) => item.length > 0)
-          .slice(0, 4);
-
-        console.log(
-          `parseSection: Found ${result.length} items for ${sectionName}:`,
-          result
-        );
-        return result;
-      } else {
-        console.log(`parseSection: No matches found for ${sectionName}`);
-        return [];
-      }
-    } catch (error) {
-      console.error(`parseSection error for ${sectionName}:`, error);
-      return [];
-    }
+  // Robust section parser
+  const parseSection = (text: string, header: string): string[] => {
+    if (typeof text !== 'string') return [];
+    const regex = new RegExp(`${header}[:\\s]*([^\\n]*(?:\\n\\s*[-•].*)*)`, 'i');
+    const match = text.match(regex);
+    if (!match || typeof match[1] !== 'string') return [];
+    return match[1]
+      .split(/[-•]/)
+      .map(s => s.trim())
+      .filter(s => s)
+      .slice(0, 4);
   };
 
-  const strengths = parseSection(analysisText, "Key Strengths|Strengths");
-  const improvements = parseSection(
-    analysisText,
-    "Critical Issues|Improvements|Areas for"
-  );
-  const recommendations = parseSection(
-    analysisText,
-    "Recommendations|Quick Wins"
-  );
+  const strengths = parseSection(analysisText, 'Key Strengths|Strengths');
+  const improvements = parseSection(analysisText, 'Critical Issues|Improvements|Areas for');
+  const recommendations = parseSection(analysisText, 'Recommendations|Quick Wins');
 
-  // Mock skills data (you can enhance this by parsing from AI response)
   const skillsData = [
-    {
-      name: "Technical Skills",
-      current: Math.floor(atsScore / 12),
-      recommended: 10,
-    },
-    { name: "Keywords", current: Math.floor(atsScore / 15), recommended: 9 },
-    { name: "Format/ATS", current: Math.floor(atsScore / 11), recommended: 8 },
-    { name: "Experience", current: Math.floor(atsScore / 13), recommended: 10 },
+    { name: 'Technical', current: Math.floor(atsScore / 12), recommended: 10 },
+    { name: 'Keywords', current: Math.floor(atsScore / 15), recommended: 9 },
+    { name: 'Format', current: Math.floor(atsScore / 11), recommended: 8 },
+    { name: 'Experience', current: Math.floor(atsScore / 13), recommended: 10 },
   ];
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "#10B981"; // Green
-    if (score >= 60) return "#F59E0B"; // Amber
-    return "#EF4444"; // Red
-  };
-
-  const getScoreLabel = (score: number) => {
-    if (score >= 80) return "Excellent";
-    if (score >= 60) return "Good";
-    return "Needs Work";
-  };
+  const getScoreColor = (s: number) =>
+    s >= 80 ? theme.success : s >= 60 ? theme.warning : theme.error;
+  const getScoreLabel = (s: number) =>
+    s >= 80 ? 'Excellent' : s >= 60 ? 'Good' : 'Needs Work';
 
   return (
     <motion.div
@@ -270,132 +94,88 @@ export function EnhancedResumeAnalysis({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       style={{
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        padding: "2px",
-        borderRadius: "20px",
-        marginTop: "20px",
+        background: theme.accent,
+        padding: 2,
+        borderRadius: 20,
+        marginTop: 20,
       }}
     >
       <div
         style={{
-          background: "white",
-          borderRadius: "18px",
-          padding: "30px",
+          background: theme.cardBackground,
+          borderRadius: 18,
+          padding: 30,
+          transition: 'all 0.3s ease',
         }}
       >
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            marginBottom: "30px",
-          }}
+          style={{ display: 'flex', alignItems: 'center', marginBottom: 30 }}
         >
           <div
             style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              borderRadius: "12px",
-              padding: "12px",
-              marginRight: "16px",
+              background: theme.accent,
+              borderRadius: 12,
+              padding: 12,
+              marginRight: 16,
             }}
           >
             <Target size={24} color="white" />
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: "1.8rem", color: "#1a202c" }}>
+            <h2 style={{ margin: 0, fontSize: '1.8rem', color: theme.textPrimary }}>
               🎯 AI-Powered Analysis Results
             </h2>
-            <p style={{ margin: "4px 0 0", color: "#718096" }}>
+            <p style={{ margin: '4px 0 0', color: theme.textSecondary }}>
               Professional resume evaluation with ATS optimization
             </p>
           </div>
         </motion.div>
 
-        {/* Debug Info - Remove this in production */}
-        {process.env.NODE_ENV === "development" && (
-          <div
-            style={{
-              background: "#f3f4f6",
-              border: "1px solid #d1d5db",
-              borderRadius: "8px",
-              padding: "12px",
-              marginBottom: "20px",
-              fontSize: "0.875rem",
-              color: "#374151",
-            }}
-          >
-            <strong>Debug Info:</strong>
-            <br />
-            Analysis Text Length: {analysisText.length}
-            <br />
-            Has Candidates: {analysis?.candidates ? "Yes" : "No"}
-            <br />
-            ATS Score: {atsScore}, Rating: {overallRating}
-          </div>
-        )}
-
-        {/* Score Cards Grid */}
+        {/* Score Grid */}
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: "20px",
-            marginBottom: "30px",
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: 20,
+            marginBottom: 30,
           }}
         >
-          {/* ATS Compatibility Score */}
+          {/* ATS Score */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2 }}
             style={{
-              background: "linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)",
-              borderRadius: "16px",
-              padding: "24px",
-              textAlign: "center",
+              background: theme.cardBackground,
+              borderRadius: 16,
+              padding: 24,
+              textAlign: 'center',
               border: `2px solid ${getScoreColor(atsScore)}`,
-              boxShadow: "0 8px 25px rgba(0, 0, 0, 0.1)",
-              position: "relative",
-              overflow: "hidden",
             }}
           >
-            <div
-              style={{
-                width: "100px",
-                height: "100px",
-                margin: "0 auto 16px",
-                position: "relative",
-              }}
-            >
+            <div style={{ width: 100, height: 100, margin: '0 auto 16px' }}>
               <CircularProgressbar
                 value={animatedScore}
                 text={`${animatedScore}`}
                 styles={buildStyles({
                   pathColor: getScoreColor(atsScore),
                   textColor: getScoreColor(atsScore),
-                  trailColor: "#f1f5f9",
-                  textSize: "24px",
-                  pathTransition: "stroke-dashoffset 0.8s ease 0s",
+                  trailColor: theme.border,
+                  textSize: '24px',
                 })}
               />
             </div>
-            <h3
-              style={{
-                margin: "0 0 8px",
-                fontSize: "1.2rem",
-                color: "#2d3748",
-              }}
-            >
+            <h3 style={{ margin: '0 0 8px', color: theme.textPrimary }}>
               ATS Compatibility
             </h3>
             <p
               style={{
                 margin: 0,
                 color: getScoreColor(atsScore),
-                fontWeight: "bold",
-                fontSize: "1.1rem",
+                fontWeight: 'bold',
               }}
             >
               {getScoreLabel(atsScore)}
@@ -408,21 +188,14 @@ export function EnhancedResumeAnalysis({
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3 }}
             style={{
-              background: "linear-gradient(135deg, #ebf4ff 0%, #dbeafe 100%)",
-              borderRadius: "16px",
-              padding: "24px",
-              textAlign: "center",
-              border: "2px solid #3b82f6",
-              boxShadow: "0 8px 25px rgba(59, 130, 246, 0.15)",
+              background: theme.cardBackground,
+              borderRadius: 16,
+              padding: 24,
+              textAlign: 'center',
+              border: `2px solid ${theme.accent}`,
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                marginBottom: "16px",
-              }}
-            >
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
               {[...Array(10)].map((_, i) => (
                 <motion.div
                   key={i}
@@ -431,36 +204,27 @@ export function EnhancedResumeAnalysis({
                     scale: i < overallRating ? 1.2 : 0.4,
                     opacity: i < overallRating ? 1 : 0.3,
                   }}
-                  transition={{ delay: 0.1 * i, type: "spring" }}
+                  transition={{ delay: 0.1 * i, type: 'spring' }}
                   style={{
-                    width: "14px",
-                    height: "14px",
-                    borderRadius: "50%",
-                    backgroundColor: i < overallRating ? "#3b82f6" : "#e5e7eb",
-                    margin: "0 2px",
-                    boxShadow:
-                      i < overallRating
-                        ? "0 2px 4px rgba(59, 130, 246, 0.3)"
-                        : "none",
+                    width: 14,
+                    height: 14,
+                    borderRadius: '50%',
+                    backgroundColor:
+                      i < overallRating ? theme.accent : theme.border,
+                    margin: '0 2px',
                   }}
                 />
               ))}
             </div>
-            <h3
-              style={{
-                margin: "0 0 8px",
-                fontSize: "1.2rem",
-                color: "#2d3748",
-              }}
-            >
+            <h3 style={{ margin: '0 0 8px', color: theme.textPrimary }}>
               Overall Rating
             </h3>
             <p
               style={{
                 margin: 0,
-                fontSize: "2rem",
-                fontWeight: "bold",
-                color: "#3b82f6",
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                color: theme.accent,
               }}
             >
               {overallRating}/10
@@ -473,46 +237,34 @@ export function EnhancedResumeAnalysis({
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.4 }}
             style={{
-              background: "linear-gradient(135deg, #f0fff4 0%, #dcfce7 100%)",
-              borderRadius: "16px",
-              padding: "24px",
-              border: "2px solid #10b981",
-              boxShadow: "0 8px 25px rgba(16, 185, 129, 0.15)",
+              background: theme.cardBackground,
+              borderRadius: 16,
+              padding: 24,
+              textAlign: 'center',
+              border: `2px solid ${theme.success}`,
             }}
           >
-            <div style={{ textAlign: "center", marginBottom: "16px" }}>
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
               <motion.div
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
               >
-                <Zap size={32} color="#10b981" />
+                <Zap size={32} color={theme.success} />
               </motion.div>
             </div>
-            <h3
-              style={{
-                margin: "0 0 16px",
-                fontSize: "1.2rem",
-                color: "#2d3748",
-                textAlign: "center",
-              }}
-            >
+            <h3 style={{ margin: '0 0 16px', color: theme.textPrimary }}>
               Quick Actions
             </h3>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
-            >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 style={{
-                  background: "#10b981",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "10px 16px",
-                  color: "white",
-                  fontSize: "0.9rem",
-                  cursor: "pointer",
-                  fontWeight: "500",
+                  background: theme.success,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '10px 16px',
                 }}
               >
                 📄 Generate Cover Letter
@@ -521,14 +273,11 @@ export function EnhancedResumeAnalysis({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 style={{
-                  background: "transparent",
-                  border: "2px solid #10b981",
-                  borderRadius: "8px",
-                  padding: "8px 16px",
-                  color: "#10b981",
-                  fontSize: "0.9rem",
-                  cursor: "pointer",
-                  fontWeight: "500",
+                  background: 'transparent',
+                  border: `2px solid ${theme.success}`,
+                  color: theme.success,
+                  borderRadius: 8,
+                  padding: '8px 16px',
                 }}
               >
                 📊 Download Report
@@ -537,77 +286,58 @@ export function EnhancedResumeAnalysis({
           </motion.div>
         </div>
 
-        {/* Key Insights Cards */}
+        {/* Insights Cards */}
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-            gap: "20px",
-            marginBottom: "30px",
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: 20,
+            marginBottom: 30,
           }}
         >
-          {/* Strengths */}
           {strengths.length > 0 && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
               style={{
-                background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)",
-                borderRadius: "12px",
-                padding: "20px",
-                border: "1px solid #a7f3d0",
+                background: theme.success + '20',
+                borderRadius: 12,
+                padding: 20,
+                border: `1px solid ${theme.success}`,
               }}
             >
-              <h4
-                style={{
-                  margin: "0 0 12px",
-                  color: "#065f46",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <CheckCircle size={18} style={{ marginRight: "8px" }} />
-                Key Strengths
+              <h4 style={{ display: 'flex', alignItems: 'center', color: theme.success }}>
+                <CheckCircle size={18} style={{ marginRight: 8 }} /> Key Strengths
               </h4>
-              <ul style={{ margin: 0, paddingLeft: "20px", color: "#047857" }}>
-                {strengths.slice(0, 3).map((strength, i) => (
-                  <li key={i} style={{ marginBottom: "4px" }}>
-                    {strength}
+              <ul style={{ paddingLeft: 20, color: theme.textPrimary }}>
+                {strengths.map((s, i) => (
+                  <li key={i} style={{ marginBottom: 4 }}>
+                    {s}
                   </li>
                 ))}
               </ul>
             </motion.div>
           )}
-
-          {/* Improvements */}
           {improvements.length > 0 && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.6 }}
               style={{
-                background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
-                borderRadius: "12px",
-                padding: "20px",
-                border: "1px solid #f59e0b",
+                background: theme.warning + '20',
+                borderRadius: 12,
+                padding: 20,
+                border: `1px solid ${theme.warning}`,
               }}
             >
-              <h4
-                style={{
-                  margin: "0 0 12px",
-                  color: "#92400e",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <AlertTriangle size={18} style={{ marginRight: "8px" }} />
-                Areas to Improve
+              <h4 style={{ display: 'flex', alignItems: 'center', color: theme.warning }}>
+                <AlertTriangle size={18} style={{ marginRight: 8 }} /> Areas to Improve
               </h4>
-              <ul style={{ margin: 0, paddingLeft: "20px", color: "#b45309" }}>
-                {improvements.slice(0, 3).map((improvement, i) => (
-                  <li key={i} style={{ marginBottom: "4px" }}>
-                    {improvement}
+              <ul style={{ paddingLeft: 20, color: theme.textPrimary }}>
+                {improvements.map((imp, i) => (
+                  <li key={i} style={{ marginBottom: 4 }}>
+                    {imp}
                   </li>
                 ))}
               </ul>
@@ -615,87 +345,59 @@ export function EnhancedResumeAnalysis({
           )}
         </div>
 
-        {/* Skills Analysis Chart */}
+        {/* Skills Chart */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
           style={{
-            background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-            borderRadius: "16px",
-            padding: "24px",
-            marginBottom: "30px",
-            border: "1px solid #e2e8f0",
+            background: theme.cardBackground,
+            borderRadius: 16,
+            padding: 24,
+            border: `1px solid ${theme.border}`,
           }}
         >
-          <h3
-            style={{
-              margin: "0 0 20px",
-              display: "flex",
-              alignItems: "center",
-              color: "#2d3748",
-            }}
-          >
-            <TrendingUp size={20} style={{ marginRight: "8px" }} />
-            Skills Gap Analysis
+          <h3 style={{ display: 'flex', alignItems: 'center', color: theme.textPrimary }}>
+            <TrendingUp size={20} style={{ marginRight: 8 }} /> Skills Gap Analysis
           </h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={skillsData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
+              <XAxis dataKey="name" stroke={theme.textSecondary} />
+              <YAxis stroke={theme.textSecondary} />
               <Tooltip />
-              <Bar
-                dataKey="current"
-                fill="#667eea"
-                name="Current Level"
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar
-                dataKey="recommended"
-                fill="#764ba2"
-                name="Target Level"
-                radius={[4, 4, 0, 0]}
-              />
+              <Bar dataKey="current" fill={theme.accent} name="Current Level" />
+              <Bar dataKey="recommended" fill={theme.accent} opacity={0.6} name="Target Level" />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
 
-        {/* Detailed Analysis */}
+        {/* Full Analysis Text */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
           style={{
-            background: "linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%)",
-            borderRadius: "12px",
-            padding: "24px",
-            border: "1px solid #e5e5e5",
+            background: theme.cardBackground,
+            borderRadius: 12,
+            padding: 24,
+            border: `1px solid ${theme.border}`,
           }}
         >
-          <h3
-            style={{
-              margin: "0 0 16px",
-              display: "flex",
-              alignItems: "center",
-              color: "#2d3748",
-            }}
-          >
-            <FileText size={20} style={{ marginRight: "8px" }} />
-            Complete AI Analysis
+          <h3 style={{ display: 'flex', alignItems: 'center', color: theme.textPrimary }}>
+            <FileText size={20} style={{ marginRight: 8 }} /> Complete AI Analysis
           </h3>
           <div
             style={{
-              whiteSpace: "pre-wrap",
-              lineHeight: "1.6",
-              fontSize: "0.95rem",
-              color: "#4a5568",
-              maxHeight: "300px",
-              overflowY: "auto",
-              padding: "16px",
-              background: "white",
-              borderRadius: "8px",
-              border: "1px solid #e2e8f0",
+              whiteSpace: 'pre-wrap',
+              lineHeight: 1.6,
+              color: theme.textPrimary,
+              maxHeight: 300,
+              overflowY: 'auto',
+              background: 'white',
+              padding: 16,
+              borderRadius: 8,
+              border: `1px solid ${theme.border}`,
             }}
           >
             {analysisText}
