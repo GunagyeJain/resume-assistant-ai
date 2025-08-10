@@ -18,7 +18,7 @@ export function ThemeToggle() {
         background: theme.cardBackground,
         border: `2px solid ${theme.border}`,
         borderRadius: '50px',
-        padding: '12px 16px',
+        padding: '8px 12px',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
@@ -34,34 +34,28 @@ export function ThemeToggle() {
       <motion.div
         animate={{ rotate: isDarkMode ? 180 : 0 }}
         transition={{ duration: 0.3 }}
+        style={{ display: 'flex', alignItems: 'center' }}
       >
-        {isDarkMode ? (
-          <Moon size={20} color={theme.accent} />
-        ) : (
-          <Sun size={20} color={theme.accent} />
-        )}
+        {isDarkMode ? <Moon size={20} color="currentColor" /> : <Sun size={20} color="currentColor" />}
       </motion.div>
-      
-      <span style={{ display: 'none' }}>
-        {isDarkMode ? 'Dark' : 'Light'}
-      </span>
-      
-      {/* Toggle Switch */}
-      <div style={{
-        width: '40px',
-        height: '20px',
-        background: isDarkMode ? theme.accent : theme.border,
-        borderRadius: '10px',
-        position: 'relative',
-        transition: 'all 0.3s ease'
-      }}>
+
+      <div
+        style={{
+          width: '38px',
+          height: '20px',
+          background: isDarkMode ? theme.accent : theme.border,
+          borderRadius: '10px',
+          position: 'relative',
+          transition: 'all 0.3s ease'
+        }}
+      >
         <motion.div
-          animate={{ x: isDarkMode ? 20 : 0 }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          animate={{ x: isDarkMode ? 18 : 0 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           style={{
             width: '16px',
             height: '16px',
-            background: 'white',
+            background: '#fff',
             borderRadius: '50%',
             position: 'absolute',
             top: '2px',

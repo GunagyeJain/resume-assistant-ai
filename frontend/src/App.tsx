@@ -1,13 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { FileUpload } from "./components/FileUpload";
 import { JobDescriptionInput } from "./components/JobDescriptionInput";
 import { EnhancedResumeAnalysis } from "./components/EnhancedResumeAnalysis";
 import { CoverLetterGenerator } from "./components/CoverLetterGenerator";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { useTheme } from "./contexts/ThemeContext";
-import { ExportReport } from "./components/ExportReport";
+import { Download, Upload, ClipboardList, Search } from "lucide-react";
 
+import { GitHubProfileInput } from "./components/GitHubProfileInput";
+import { LinkedInSummaryInput } from "./components/LinkedInSummaryInput";
+
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { motion } from "framer-motion";
 import axios from "axios";
+
 import "./App.css";
 
 interface AnalysisResult {
@@ -22,12 +29,60 @@ interface AnalysisResult {
 
 function App() {
   const { theme } = useTheme();
-  const [resumeText, setResumeText] = useState<string>("");
+  const [resumeText, setResumeText] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [jobDescription, setJobDescription] = useState<string>("");
+  const [jobDescription, setJobDescription] = useState("");
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const reportRef = useRef<HTMLDivElement>(null);
+  const [exportLoading, setExportLoading] = useState(false);
+
+  const [linkedInSummary, setLinkedInSummary] = React.useState("");
+  const [gitHubProfile, setGitHubProfile] = React.useState<any>(null);
+
+  const handleExportPDF = async () => {
+    if (!reportRef.current) return;
+    setExportLoading(true);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        width: reportRef.current.scrollWidth,
+        height: reportRef.current.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: "a4",
+      });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+
+      const ratio = Math.min(pdfW / canvas.width, pdfH / canvas.height);
+      const imgW = canvas.width * ratio;
+      const imgH = canvas.height * ratio;
+      const x = (pdfW - imgW) / 2;
+      const y = 20;
+
+      pdf.addImage(imgData, "PNG", x, y, imgW, imgH);
+      pdf.save(
+        `Resume_Analysis_Report_${new Date().toISOString().split("T")[0]}.pdf`
+      );
+    } catch (err) {
+      console.error("PDF export failed:", err);
+      alert("PDF export failed. Please try again.");
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
   const handleFileUpload = (content: string, file?: File) => {
     if (file && content === "FILE_UPLOAD") {
@@ -41,11 +96,11 @@ function App() {
   };
 
   const handleAnalyze = async () => {
+    // ✅ Basic validation
     if (!resumeText && !resumeFile) {
       setError("Please upload a resume first");
       return;
     }
-
     if (!jobDescription.trim()) {
       setError("Please provide a job description");
       return;
@@ -57,138 +112,159 @@ function App() {
     try {
       let response;
 
+      // Prepare optional extra data
+      const githubData = gitHubProfile
+        ? {
+            login: gitHubProfile.login,
+            name: gitHubProfile.name,
+            bio: gitHubProfile.bio,
+            public_repos: gitHubProfile.public_repos,
+            followers: gitHubProfile.followers,
+            url: gitHubProfile.html_url,
+          }
+        : null;
+
+      const linkedinData = linkedInSummary?.trim() || null;
+
       if (resumeFile) {
+        // ✅ If a file was uploaded, send it as FormData
         const formData = new FormData();
         formData.append("file", resumeFile);
         formData.append("job_description", jobDescription);
+        if (githubData)
+          formData.append("github_profile", JSON.stringify(githubData));
+        if (linkedinData) formData.append("linkedin_summary", linkedinData);
 
         response = await axios.post(
           "http://localhost:8000/resume/analyze-file",
           formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
       } else {
+        // ✅ If text content was provided instead of file
         response = await axios.post("http://localhost:8000/resume/analyze", {
           text: resumeText,
+          job_description: jobDescription,
+          github_profile: githubData,
+          linkedin_summary: linkedinData,
         });
       }
 
-      console.log("Current analysis:", response.data.analysis);
+      // ✅ Save the AI analysis result
       setAnalysis(response.data.analysis);
     } catch (err) {
-      setError("Failed to analyze resume. Please try again.");
       console.error("Analysis error:", err);
+      setError("Failed to analyze resume. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: `linear-gradient(135deg, ${theme.background} 0%, ${theme.cardBackground} 100%)`,
-        transition: "all 0.3s ease",
-      }}
-    >
+    <div className="app-container">
       <ThemeToggle />
 
-      <div
-        className="app"
-        style={{
-          background: "transparent",
-          color: theme.textPrimary,
-        }}
-      >
+      <div className="app">
         <header className="app-header">
-          <h1 style={{ color: theme.textPrimary }}>
-            🤖 AI Resume & Portfolio Assistant
+          <h1>
+            <ClipboardList size={32} /> AI Resume &amp; Portfolio Assistant
           </h1>
-          <p style={{ color: theme.textSecondary }}>
-            Upload PDF, DOCX, or TXT files for AI-powered resume analysis +
+          <p>
+            Upload PDF, DOCX, or TXT files for AI-powered resume analysis and
             cover letter generation
           </p>
         </header>
 
         <main className="app-main">
-          {error && (
-            <div
-              style={{
-                background: `${theme.error}20`,
-                color: theme.error,
-                border: `1px solid ${theme.error}40`,
-                borderRadius: "8px",
-                padding: "12px 16px",
-                marginBottom: "20px",
-                textAlign: "center",
-              }}
-            >
-              {error}
-            </div>
-          )}
+          {error && <div className="error-message">{error}</div>}
 
           <div className="upload-section">
-            <div
-              style={{
-                background: theme.cardBackground,
-                padding: "24px",
-                borderRadius: "12px",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
-                border: `1px solid ${theme.border}`,
-                transition: "all 0.3s ease",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "1.5rem",
-                  color: theme.textPrimary,
-                  margin: "0 0 20px 0",
-                  fontWeight: 600,
-                }}
-              >
-                📄 Upload Resume
+            {/* Upload Resume */}
+            <div className="card">
+              <h2>
+                <Upload size={20} /> Upload Resume
               </h2>
               <FileUpload onFileUpload={handleFileUpload} />
               {(resumeText || resumeFile) && (
-                <div
-                  style={{
-                    background: `${theme.success}20`,
-                    color: theme.success,
-                    border: `1px solid ${theme.success}40`,
-                    borderRadius: "8px",
-                    padding: "12px 16px",
-                    marginTop: "16px",
-                  }}
-                >
-                  ✅ Resume {resumeFile ? `file (${resumeFile.name})` : "text"}{" "}
-                  uploaded successfully!
+                <div className="success-message">
+                  {resumeFile ? `File (${resumeFile.name})` : "Text"} uploaded
+                  successfully
                 </div>
               )}
             </div>
 
-            <div
-              style={{
-                background: theme.cardBackground,
-                padding: "24px",
-                borderRadius: "12px",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
-                border: `1px solid ${theme.border}`,
-                transition: "all 0.3s ease",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "1.5rem",
-                  color: theme.textPrimary,
-                  margin: "0 0 20px 0",
-                  fontWeight: 600,
-                }}
-              >
-                📋 Job Description
+            {/* Profile Insights */}
+            <div className="card">
+              <h2>Profile Insights</h2>
+              <GitHubProfileInput onProfileFetched={setGitHubProfile} />
+              <LinkedInSummaryInput
+                value={linkedInSummary}
+                onChange={setLinkedInSummary}
+              />
+              {gitHubProfile && (
+                <div className="profile-card">
+                  <img
+                    src={gitHubProfile.avatar_url}
+                    alt="Avatar"
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 56,
+                      marginBottom: 8,
+                    }}
+                  />
+                  <div style={{ fontWeight: "700", marginBottom: 4 }}>
+                    {gitHubProfile.name || gitHubProfile.login}
+                  </div>
+                  <div
+                    style={{ color: "var(--text-secondary)", marginBottom: 6 }}
+                  >
+                    {gitHubProfile.bio}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.92rem",
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    <strong>{gitHubProfile.public_repos}</strong> public repos •{" "}
+                    <strong>{gitHubProfile.followers}</strong> followers
+                  </div>
+                  <a
+                    href={gitHubProfile.html_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      marginTop: 8,
+                      display: "inline-block",
+                      color: "var(--accent)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    View GitHub &rarr;
+                  </a>
+                </div>
+              )}
+              {linkedInSummary && (
+                <div className="profile-card">
+                  <div style={{ fontWeight: 700 }}>LinkedIn Summary</div>
+                  <div
+                    style={{
+                      fontSize: "0.96rem",
+                      color: "var(--text-secondary)",
+                      marginTop: 6,
+                    }}
+                  >
+                    {linkedInSummary}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Job Description */}
+            <div className="card">
+              <h2>
+                <ClipboardList size={20} /> Job Description
               </h2>
               <JobDescriptionInput
                 value={jobDescription}
@@ -204,38 +280,37 @@ function App() {
               disabled={
                 (!resumeText && !resumeFile) || !jobDescription || loading
               }
-              style={{
-                background: loading
-                  ? theme.border
-                  : `linear-gradient(135deg, ${theme.accent} 0%, ${theme.success} 100%)`,
-                color: "white",
-                border: "none",
-                padding: "16px 32px",
-                borderRadius: "8px",
-                fontSize: "1.1rem",
-                fontWeight: "600",
-                cursor: loading ? "not-allowed" : "pointer",
-                transition: "all 0.2s ease",
-                minWidth: "200px",
-                opacity:
-                  (!resumeText && !resumeFile) || !jobDescription || loading
-                    ? 0.6
-                    : 1,
-              }}
             >
-              {loading ? "🔄 Analyzing..." : "🔍 Analyze Resume"}
+              <Search size={18} />
+              {loading ? "Analyzing..." : "Analyze Resume"}
             </button>
           </div>
 
           {analysis && (
-            <div className="results-section">
-              <EnhancedResumeAnalysis analysis={analysis} />
-              <CoverLetterGenerator
-                resumeText={resumeText || "Resume content from file"}
-                jobDescription={jobDescription}
-              />
-              <ExportReport />
-            </div>
+            <>
+              <div ref={reportRef} className="results-wrapper">
+                <EnhancedResumeAnalysis analysis={analysis} />
+                <CoverLetterGenerator
+                  resumeText={resumeText || "Resume content from uploaded file"}
+                  jobDescription={jobDescription}
+                />
+              </div>
+
+              <div className="export-section">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleExportPDF}
+                  disabled={exportLoading}
+                  className="analyze-button"
+                >
+                  <Download size={18} />
+                  {exportLoading
+                    ? "Generating PDF..."
+                    : "Download Complete Report"}
+                </motion.button>
+              </div>
+            </>
           )}
         </main>
       </div>

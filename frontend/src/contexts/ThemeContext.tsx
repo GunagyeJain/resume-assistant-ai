@@ -1,57 +1,53 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+interface Theme {
+  background: string;
+  cardBackground: string;
+  textPrimary: string;
+  textSecondary: string;
+  border: string;
+  accent: string;
+  success: string;
+  warning: string;
+  error: string;
+}
+
 interface ThemeContextType {
   isDarkMode: boolean;
   toggleTheme: () => void;
-  theme: {
-    background: string;
-    cardBackground: string;
-    textPrimary: string;
-    textSecondary: string;
-    border: string;
-    accent: string;
-    success: string;
-    warning: string;
-    error: string;
-  };
+  theme: Theme;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
+  return ctx;
 };
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('saved-theme');
+    if (saved === 'dark') return true;
+    if (saved === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
 
-  // Load theme preference from localStorage
+  // Apply dark-mode class to <html> when theme changes
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-    } else if (savedTheme === 'light') {
-      setIsDarkMode(false);
+    const root = document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark-mode');
     } else {
-      // Check system preference
-      setIsDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      root.classList.remove('dark-mode');
     }
-  }, []);
-
-  // Save theme preference
-  useEffect(() => {
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    localStorage.setItem('saved-theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
+  const toggleTheme = () => setIsDarkMode(prev => !prev);
 
-  const lightTheme = {
+  const lightTheme: Theme = {
     background: '#ffffff',
     cardBackground: '#f8fafc',
     textPrimary: '#1a202c',
@@ -60,10 +56,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     accent: '#667eea',
     success: '#10b981',
     warning: '#f59e0b',
-    error: '#ef4444'
+    error: '#ef4444',
   };
 
-  const darkTheme = {
+  const darkTheme: Theme = {
     background: '#0f172a',
     cardBackground: '#1e293b',
     textPrimary: '#f1f5f9',
@@ -72,7 +68,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     accent: '#8b5cf6',
     success: '#10b981',
     warning: '#f59e0b',
-    error: '#ef4444'
+    error: '#ef4444',
   };
 
   const theme = isDarkMode ? darkTheme : lightTheme;

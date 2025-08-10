@@ -1,0 +1,205 @@
+.cover-letter-card {
+  background: var(--card-bg);
+  padding: 32px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cover-letter-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+}
+
+.cover-letter-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.icon-wrapper {
+  background: var(--accent);
+  border-radius: 12px;
+  padding: 12px;
+  margin-right: 16px;
+}
+.cover-letter-header h2 {
+  font-size: 1.75rem;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+.cover-letter-header p {
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.cover-letter-error {
+  background: rgba(239,71,111,0.1);
+  color: var(--error);
+  border: 1px solid rgba(239,71,111,0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.cover-letter-tone-selector {
+  margin-bottom: 24px;
+}
+.cover-letter-tone-selector label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.tone-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.tone-buttons button {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tone-buttons button.selected {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(59,130,246,0.05);
+}
+
+.cover-letter-generate {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.cover-letter-generate button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 36px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cover-letter-generate button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(59,130,246,0.3);
+}
+.cover-letter-generate button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cover-letter-output {
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+}
+.output-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.output-header h3 {
+  font-size: 1.125rem;
+  color: var(--text-primary);
+}
+.output-header .actions {
+  display: flex;
+  gap: 8px;
+}
+.output-header .actions button {
+  background: transparent;
+  border: 1px solid var(--text-secondary);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.output-header .actions button.copied {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+
+.output-body {
+  padding: 24px;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  font-family: Georgia, serif;
+}
+
+/* CoverLetterGenerator.css */
+.cover-letter-card {
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
+.cover-letter-header h2,
+.cover-letter-header p {
+  color: var(--text-primary);
+}
+.cover-letter-error {
+  background: rgba(var(--error-rgb), 0.1);
+  border-color: rgba(var(--error-rgb), 0.3);
+  color: var(--error);
+}
+.cover-letter-tone-selector label {
+  color: var(--text-primary);
+}
+.tone-buttons button {
+  background: var(--card-bg);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+.tone-buttons button.selected {
+  background: rgba(var(--accent-rgb), 0.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.cover-letter-generate button {
+  background: var(--accent);
+  color: #fff;
+}
+.cover-letter-output {
+  background: var(--card-bg);
+  border-color: var(--border);
+}
+.output-header {
+  background: var(--card-bg);
+  border-color: var(--border);
+}
+.output-header h3 {
+  color: var(--text-primary);
+}
+.output-header .actions button {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+}
+.output-header .actions button.copied {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+.output-body {
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
